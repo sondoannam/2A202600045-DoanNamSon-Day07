@@ -22,8 +22,19 @@ class KnowledgeBaseAgent:
         results = self.store.search(question, top_k)
         
         # Build prompt
-        context = "\n\n".join([f"Chunk {i+1}:\n{chunk['content']}" for i, chunk in enumerate(results)])
-        prompt = f"You are a helpful assistant. Use the context below to answer the question.If the answer is not in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\nAnswer:"
+        context_parts = []
+        for res in results:
+            text_to_use = res['metadata'].get('parent_content', res['content'])
+            context_parts.append(f"- {text_to_use}")
+            
+        context = "\n\n".join(context_parts)
+        prompt = (
+            "Bạn là trợ lý ảo hỗ trợ chính sách Shopee. Hãy trả lời câu hỏi dựa TRÊN NGỮ CẢNH ĐƯỢC CUNG CẤP DƯỚI ĐÂY.\n"
+            "Nếu ngữ cảnh không chứa thông tin, hãy nói 'Tôi không tìm thấy thông tin trong tài liệu'.\n\n"
+            f"NGỮ CẢNH:\n{context}\n\n"
+            f"CÂU HỎI: {question}\n"
+            "TRẢ LỜI:"
+        )
         
-        # 3. Call LLM
+        # Call LLM
         return self.llm_fn(prompt)

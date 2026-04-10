@@ -30,12 +30,13 @@ class EmbeddingStore:
         try:
             import chromadb
 
-            self.client = chromadb.Client()
+            # self.client = chromadb.Client()
+            self.client = chromadb.PersistentClient(path="./chroma_data")
             try:
                 self.client.delete_collection(name=self._collection_name)
             except Exception:
                 pass
-            self._collection = self.client.get_or_create_collection(name=self._collection_name)
+            self._collection = self.client.get_or_create_collection(name=self._collection_name, metadata={"hnsw:space": "cosine"})
             self._use_chroma = True
         except Exception:
             self._use_chroma = False
