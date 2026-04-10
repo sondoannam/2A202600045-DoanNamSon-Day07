@@ -46,27 +46,30 @@
 
 ### Domain & Lý Do Chọn
 
-**Domain:** [ví dụ: Customer support FAQ, Vietnamese law, cooking recipes, ...]
+**Domain:** Shopee — Chính sách Trả hàng / Hoàn tiền (FAQ)
 
 **Tại sao nhóm chọn domain này?**
-> *Viết 2-3 câu:*
+> Shopee là sàn TMĐT phổ biến tại Việt Nam, chính sách trả hàng/hoàn tiền là nội dung người dùng thường xuyên cần tra cứu. Domain này có cấu trúc FAQ rõ ràng, nhiều điều kiện cụ thể dễ đánh giá độ chính xác của retrieval. Ngoài ra tài liệu tiếng Việt giúp nhóm thực hành RAG với ngôn ngữ thực tế.
 
 ### Data Inventory
 
 | # | Tên tài liệu | Nguồn | Số ký tự | Metadata đã gán |
 |---|--------------|-------|----------|-----------------|
-| 1 | | | | |
-| 2 | | | | |
-| 3 | | | | |
-| 4 | | | | |
-| 5 | | | | |
+| 1 | shopee_chinh_sach_tra_hang_hoan_tien.md | help.shopee.vn/portal/4/article/77251 | 27,287 | category: "policy", topic: "return_refund", lang: "vi" |
+| 2 | shopee_dong_kiem.md | help.shopee.vn/portal/4/article/124982 | 9,948 | category: "faq", topic: "dong_kiem", lang: "vi" |
+| 3 | shopee_huy_don_hoan_voucher.md | help.shopee.vn/portal/4/article/79296 | 7,641 | category: "faq", topic: "voucher_refund", lang: "vi" |
+| 4 | shopee_phuong_thuc_tra_hang.md | help.shopee.vn/portal/4/article/189477 | 9,467 | category: "guide", topic: "return_method", lang: "vi" |
+| 5 | shopee_quy_dinh_chung_tra_hang.md | help.shopee.vn | 9,014 | category: "policy", topic: "return_rules", lang: "vi" |
+| 6 | shopee_thoi_gian_hoan_tien.md | help.shopee.vn/portal/4/article/189473 | 7,346 | category: "faq", topic: "refund_timeline", lang: "vi" |
 
 ### Metadata Schema
 
 | Trường metadata | Kiểu | Ví dụ giá trị | Tại sao hữu ích cho retrieval? |
 |----------------|------|---------------|-------------------------------|
-| | | | |
-| | | | |
+| category | string | "policy", "faq", "guide" | Phân loại tài liệu — filter khi muốn chỉ tìm FAQ hoặc policy |
+| topic | string | "return_refund", "dong_kiem", "refund_timeline" | Narrow scope retrieval theo chủ đề cụ thể |
+| lang | string | "vi" | Hữu ích nếu sau này mở rộng sang tài liệu tiếng Anh |
+
 
 ---
 
@@ -218,6 +221,7 @@ class ParentChildChunker:
 | Giang | Custome Recursive Strategy | 8 | Chunking dựa theo cấu trúc của tài liệu, đảm bảo tính toàn vẹn của thông tin đoạn văn | với những đoạn dài chunk có thể vượt quá lượng ký tự cho phép của mô hình embedding |
 | Nhữ Gia Bách | SemanticChunker | 8/10 | Chunk đúng chủ đề, score distribution rõ | Thiếu thông tin số liệu cụ thể khi chunk tách rời context |
 | Trần Quang Quí | DocumentStructureChunker| 9/10 (5/5 relevant, avg score 0.628) | Chunk bám sát cấu trúc Q&A, context coherent, không bị cắt giữa điều khoản | Multi-aspect query (Q3) score thấp 0.59 vì định nghĩa và hướng dẫn nằm ở 2 chunk khác nhau |
+| Tôi (Đoàn Nam Sơn) | Parent-Child Chunking | 9/10 (5/5 relevant, avg score 0.66) | Chunk hoạt động rất tốt, cắt đúng theo pattern Q&A, không bị cắt giữa điều khoản, rất phù hợp đối với các tài liệu có cấu trúc rõ ràng. | Với các tài liệu không có cấu trúc rõ ràng thì có thể không hiệu quả. |
 
 
 **Strategy nào tốt nhất cho domain này? Tại sao?**
@@ -315,14 +319,14 @@ tests/test_solution.py::TestEmbeddingStoreDeleteDocument::test_delete_returns_tr
 
 | Pair | Sentence A | Sentence B | Dự đoán | Actual Score | Đúng? |
 |------|-----------|-----------|---------|--------------|-------|
-| 1 | | | high / low | | |
-| 2 | | | high / low | | |
-| 3 | | | high / low | | |
-| 4 | | | high / low | | |
-| 5 | | | high / low | | |
+| 1 | Tôi có bao nhiêu ngày để gửi yêu cầu trả hàng hoàn tiền? | Người Mua có thể gửi yêu cầu trả hàng/hoàn tiền trong vòng 15 (mười lăm) ngày kể từ lúc đơn hàng được cập nhật giao hàng... | High | 0.70 | Yes |
+| 2 | Tiền hoàn về ví ShopeePay mất bao lâu? | : Thanh toán khi nhận hàng/Chuyển khoản ngân hàng. : Ví ShopeePay - áp dụng từ ngày 13.11.2025. : 24 giờ... | High | 0.66 | Yes |
+| 3 | Đồng kiểm là gì và tôi được làm gì khi đồng kiểm? | Theo hình thức “Tự sắp xếp”: Người Mua cần thanh toán trước chi phí vận chuyển cho việc trả hàng. | Low | 0.12 | Yes |
+| 4 | Mã giảm giá có được hoàn lại khi tôi trả hàng toàn bộ đơn không? | Tiền hoàn sẽ được chuyển vào Ví ShopeePay, SPayLater, Thẻ nội địa Napas, Tài Khoản Ngân Hàng... | Low | 0.21 | Yes |
+| 5 | Đồng kiểm là gì và tôi được làm gì khi đồng kiểm? | Khi đồng kiểm với Bưu tá, bạn chỉ được kiểm tra ngoại quan... KHÔNG được mở tem... KHÔNG được sử dụng thử... | High | 0.55 | Yes |
 
 **Kết quả nào bất ngờ nhất? Điều này nói gì về cách embeddings biểu diễn nghĩa?**
-> *Viết 2-3 câu:*
+- Kết quả bất ngờ nhất là Cặp số 5 (Hỏi về Đồng kiểm). Dù Chunk B chứa thông tin giải quyết hoàn hảo câu hỏi A, nhưng điểm tương đồng (0.55) lại thấp hơn hẳn so với Cặp số 1 (0.70). Điều này cho thấy Embeddings không chỉ so khớp từ khóa (lexical) mà còn cực kỳ nhạy cảm với "ý định" (intent) của câu: Câu A mang ý định "hỏi định nghĩa/khái niệm", trong khi Câu B mang ý định "hướng dẫn quy trình", sự lệch pha về ý định ngữ nghĩa này khiến vector của chúng không hoàn toàn nằm sát nhau trong không gian.
 
 ---
 
@@ -381,5 +385,3 @@ Chạy 5 benchmark queries của nhóm trên implementation cá nhân của bạ
 | Core implementation (tests) | Cá nhân | 30 / 30 |
 | Demo | Nhóm | 5 / 5 |
 | **Tổng** | | **100 / 100** |
-
-| Đoàn Nam Sơn | Parent-Child Chunking| 9/10 (5/5 relevant, avg score 0.66) | Chunk hoạt động rất tốt, cắt đúng theo pattern Q&A, không bị cắt giữa điều khoản, rất phù hợp đối với các tài liệu có cấu trúc rõ ràng như. Tuy nhiên, với các tài liệu không có cấu trúc rõ ràng thì có thể không hiệu quả. |
