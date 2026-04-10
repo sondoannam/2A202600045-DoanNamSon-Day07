@@ -221,6 +221,7 @@ class ParentChildChunker:
 | Giang | Custome Recursive Strategy | 8 | Chunking dựa theo cấu trúc của tài liệu, đảm bảo tính toàn vẹn của thông tin đoạn văn | với những đoạn dài chunk có thể vượt quá lượng ký tự cho phép của mô hình embedding |
 | Nhữ Gia Bách | SemanticChunker | 8/10 | Chunk đúng chủ đề, score distribution rõ | Thiếu thông tin số liệu cụ thể khi chunk tách rời context |
 | Trần Quang Quí | DocumentStructureChunker| 9/10 (5/5 relevant, avg score 0.628) | Chunk bám sát cấu trúc Q&A, context coherent, không bị cắt giữa điều khoản | Multi-aspect query (Q3) score thấp 0.59 vì định nghĩa và hướng dẫn nằm ở 2 chunk khác nhau |
+| Vũ Đức Duy | Agentic Chunker | 9/10 (Avg: 0.669) | Gom ngữ nghĩa cực sâu, chia văn bản rành mạch (cắt gọn giảm 4 lần lượng chunks thừa). Score cao nhất. | Phải gọi API tốn kém kinh phí, index siêu chậm, phụ thuộc vào chất lượng parser. |
 | Tôi (Đoàn Nam Sơn) | Parent-Child Chunking | 9/10 (5/5 relevant, avg score 0.66) | Chunk hoạt động rất tốt, cắt đúng theo pattern Q&A, không bị cắt giữa điều khoản, rất phù hợp đối với các tài liệu có cấu trúc rõ ràng. | Với các tài liệu không có cấu trúc rõ ràng thì có thể không hiệu quả. |
 
 
