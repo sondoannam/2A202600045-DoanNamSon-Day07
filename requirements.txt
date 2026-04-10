@@ -8,8 +8,8 @@ python-dotenv>=1.0
 #   pip install openai
 # Install both optional embedders with:
 #   pip install openai sentence-transformers
-# sentence-transformers>=3.0
-# openai>=1.0
+sentence-transformers>=3.0
+openai>=1.0
 
 # Optional: for bonus tasks
-# chromadb>=0.4.0      # Real vector database integration
+chromadb>=0.4.0      # Real vector database integration
