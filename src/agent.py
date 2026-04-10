@@ -23,7 +23,7 @@ class KnowledgeBaseAgent:
         
         # Build prompt
         context = "\n\n".join([f"Chunk {i+1}:\n{chunk['content']}" for i, chunk in enumerate(results)])
-        prompt = f"Context:\n{context}\n\nQuestion: {question}\nAnswer:"
+        prompt = f"You are a helpful assistant. Use the context below to answer the question.If the answer is not in the context, say you don't know.\n\nContext:\n{context}\n\nQuestion: {question}\nAnswer:"
         
         # 3. Call LLM
         return self.llm_fn(prompt)
