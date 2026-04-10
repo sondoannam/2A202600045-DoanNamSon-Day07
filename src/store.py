@@ -28,9 +28,13 @@ class EmbeddingStore:
         self._next_index = 0
 
         try:
-            import chromadb  # noqa: F401
+            import chromadb
 
             self.client = chromadb.Client()
+            try:
+                self.client.delete_collection(name=self._collection_name)
+            except Exception:
+                pass
             self._collection = self.client.get_or_create_collection(name=self._collection_name)
             self._use_chroma = True
         except Exception:
@@ -87,10 +91,18 @@ class EmbeddingStore:
             return
             
         if self._use_chroma:
-            ids = [doc.id for doc in docs]
+            import uuid
+            # Generate unique IDs for ChromaDB to permit adding the same logical document ID multiple times
+            ids = [f"{doc.id}_{uuid.uuid4().hex}" for doc in docs]
             documents = [doc.content for doc in docs]
-            # ChromaDB doesn't accept metadata is None, fallback to empty dict
-            metadatas = [doc.metadata if doc.metadata else {} for doc in docs]
+            
+            # Inject doc_id into metadata for deletion, and ensure we don't pass an empty dict directly if None
+            metadatas = []
+            for doc in docs:
+                m = dict(doc.metadata) if doc.metadata else {}
+                m["doc_id"] = doc.id
+                metadatas.append(m)
+                
             embeddings = [self._embedding_fn(doc.content) for doc in docs]
             
             self._collection.add(
@@ -137,18 +149,25 @@ class EmbeddingStore:
         """
         if not metadata_filter:
             return self.search(query, top_k)
-
+            
         if self._use_chroma:
-            # ChromaDB supports metadata filtering directly
+            query_emb = self._embedding_fn(query)
             results = self._collection.query(
-                query_embeddings=[self._embedding_fn(query)],
+                query_embeddings=[query_emb],
                 n_results=top_k,
                 where=metadata_filter
             )
             return self._format_chroma_results(results)
         else:
-            # In-memory fallback: filter manually
-            filtered_records = [r for r in self._store if self._matches_filter(r, metadata_filter)]
+            filtered_records = []
+            for record in self._store:
+                match = True
+                for k, v in metadata_filter.items():
+                    if record["metadata"].get(k) != v:
+                        match = False
+                        break
+                if match:
+                    filtered_records.append(record)
             return self._search_records(query, filtered_records, top_k)
 
     def _matches_filter(self, record: dict, metadata_filter: dict) -> bool:
